@@ -55,10 +55,13 @@ def train(args, model, device, train_loader, optimizer, epoch):
         optimizer.step()
         if (batch_idx + 1) % args.log_interval == 0:
             logging.info(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader)}%)]\tLoss: {loss.item()}')
-            print(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader)}%)]\tLoss: {loss.item()}')
+            if args.verbosity > 1:
+                print(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader)}%)]\tLoss: {loss.item()}')
             if args.dry_run:
                 break
-    print(f"epoch loss: {epoch_loss / len(train_loader.dataset)}")
+    if args.verbosity > 1:
+        print(f"epoch loss: {epoch_loss / len(train_loader.dataset)}")
+    logging.info(f"epoch loss: {epoch_loss / len(train_loader.dataset)}")
     return epoch_loss.item() / len(train_loader.dataset)
 
 
@@ -81,9 +84,9 @@ def test(args, model, device, test_loader):
             output = model(data)
             test_loss += F.mse_loss(output, target, reduction='sum').item()
             pred = output.argmax(dim=1)
-            correct += pred.eq(torch.argmax(target, dim=1)).sum().item()
-            
+            correct += pred.eq(torch.argmax(target, dim=1)).sum().item()   
     test_loss /= len(test_loader.dataset)
     logging.info(f'Test set: Average loss: {test_loss}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset)}%)\n')
-    print(f'\nTest set: Average loss: {test_loss}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset)}%)\n')
+    if args.verbosity > 1:
+        print(f'\nTest set: Average loss: {test_loss}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset)}%)\n')
     return test_loss

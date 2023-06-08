@@ -19,7 +19,7 @@ def main():
     parser.add_argument('--hidden-units', nargs="*", type=int, default=52, metavar='N',
                         help='number of nodes within hidden layer (default: 4)')
     parser.add_argument('--activation-fun', type=str, default="sigmoid",
-                        help='activation function to be used (default: sigmoid) (other: relu, none)')
+                        help='activation function to be used (default: sigmoid) (options: sigmoid, relu, none)')
     parser.add_argument('--train-size', type=int, default=4000,
                         help='size of training dataset (default: 4000)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -46,6 +46,8 @@ def main():
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=20, metavar='N',
                         help='how many batches to wait before logging training status (default: 20)')
+    parser.add_argument('--verbosity', type=int, default=1,
+                        help='Amount of detail to be printed (doesn\'t affect logs) (default: 1) (options: 0 = None, 1 = Indicated completion of training each model, 2 = Show loss throughout training)')
     parser.add_argument('--save-model', action='store_true', default=False,
                         help='For Saving the current Model (default: False)')
     parser.add_argument('--save-metrics', action='store_true', default=False,
@@ -71,6 +73,9 @@ def main():
         args.hidden_units = [args.hidden_units]
 
     for num in args.hidden_units:
+        if args.verbosity > 0:
+            print(f"Training model with {num} hidden units")
+
         # Get date and time for logging
         date_now = str(datetime.now().date())
         time_now = str(datetime.now().time())[:-7].replace(":", ";")
@@ -148,17 +153,20 @@ def main():
                 break
 
             if epoch % 500 == 0:
-                print(f"LEARNING RATE: {scheduler.get_lr()}")
+                if args.verbosity > 0:
+                    print(f"LEARNING RATE: {scheduler.get_lr()}")
+                    logging.info(f"LEARNING RATE: {scheduler.get_lr()}")
                 if args.save_model:
                     path = f"./models/{date_now}/{time_now}/"
                     os.makedirs(path, exist_ok = True) 
                     torch.save(model.state_dict(), os.path.join(path, f"model_w_{num}_hidden_units_epoch_{epoch}.pt"))
-
+        
         if args.save_model:
             torch.save(model.state_dict(), os.path.join(path, f"model_w_{num}_hidden_units_final.pt"))
 
         if args.save_metrics:
-            print("saving metrics")
+            if args.verbosity > 1:
+                print("saving metrics")
             with open(os.path.join(path, f"model_w_{num}_hidden_units_loss_metrics.json"), "w") as outfile:
                 outfile.write(json.dumps(metrics, indent=4))
 
