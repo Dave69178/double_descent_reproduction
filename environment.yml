@@ -1,0 +1,8 @@
+name: double_descent
+channels:
+ - defaults
+dependencies:
+ - python = 3.10
+ - numpy = 1.23
+ - pytorch::pytorch = 2.0
+ - pytorch::torchvision = 0.15
