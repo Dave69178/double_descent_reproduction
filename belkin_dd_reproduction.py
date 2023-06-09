@@ -137,7 +137,7 @@ def main():
 
         NUM_PARAMS = get_number_of_parameters(num)
 
-        if args.weight_reuse and NUM_PARAMS < args.train_size:
+        if args.weight_reuse and NUM_PARAMS < args.train_size * 10:
             print("using weights")
             model = DenseNN(num, activation, last_model_weight, args.glorot_init).to(device)
         else:
@@ -147,7 +147,7 @@ def main():
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
         # Apply learning rate decay to models under interpolation threshold
-        if NUM_PARAMS < args.train_size:
+        if NUM_PARAMS < args.train_size * 10:
             scheduler = StepLR(optimizer, step_size=500, gamma=args.gamma)
         else:
             scheduler = StepLR(optimizer, step_size=500, gamma=1)
@@ -163,7 +163,7 @@ def main():
 
             scheduler.step()
 
-            if metrics["train_loss"][-1] < 0.0001 and NUM_PARAMS < args.train_size:
+            if metrics["train_loss"][-1] < 0.0001 and NUM_PARAMS < args.train_size * 10:
                 break
 
             if epoch % 500 == 0:
