@@ -7,6 +7,7 @@ from datetime import datetime
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.nn.modules.linear import Linear
 from torch.utils.data import Subset
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
@@ -34,6 +35,10 @@ def main():
                         help='sgd momentum parameter (default: 0.95)')
     parser.add_argument('--gamma', type=float, default=0.1, metavar='M',
                         help='Learning rate step gamma (default: 0.1)')
+    parser.add_argument('--weight-reuse', action='store_true', default=False,
+                        help='Initialise larger models with smaller model final weights (default: False)')
+    parser.add_argument('--glorot-init', action='store_true', default=False,
+                        help='Initialise first model weights with glorot-uniform dist (default: False)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
     parser.add_argument('--no-mps', action='store_true', default=False,
@@ -71,6 +76,9 @@ def main():
 
     if type(args.hidden_units) == int:
         args.hidden_units = [args.hidden_units]
+
+    if args.weight_reuse:
+        last_model_weight = None
 
     for num in args.hidden_units:
         if args.verbosity > 0:
@@ -127,10 +135,16 @@ def main():
         else:
             activation = None
 
-        model = DenseNN(num, activation).to(device)
-        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-
         NUM_PARAMS = get_number_of_parameters(num)
+
+        if args.weight_reuse and NUM_PARAMS < args.train_size:
+            print("using weights")
+            model = DenseNN(num, activation, last_model_weight, args.glorot_init).to(device)
+        else:
+            print("not using weights")
+            model = DenseNN(num, activation, None, False).to(device)
+
+        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
         # Apply learning rate decay to models under interpolation threshold
         if NUM_PARAMS < args.train_size:
@@ -169,6 +183,12 @@ def main():
                 print("saving metrics")
             with open(os.path.join(path, f"model_w_{num}_hidden_units_loss_metrics.json"), "w") as outfile:
                 outfile.write(json.dumps(metrics, indent=4))
+
+        if args.weight_reuse:
+            last_model_weight = []
+            for layer in model.layers:
+                if type(layer) == Linear:
+                    last_model_weight.append(layer.weight)
 
 
 if __name__ == '__main__':

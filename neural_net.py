@@ -2,17 +2,22 @@ import logging
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.parameter import Parameter
+from torch.nn.modules.linear import Linear
+from torch.nn.init import xavier_uniform_
 
 
 class DenseNN(nn.Module):
     """
     Fully-connected neural network with 1 hidden layer for MNIST classification
     """
-    def __init__(self, num_hidden_units, activation_fun):
+    def __init__(self, num_hidden_units, activation_fun, weights=None, glorot_init=False):
         """
         params:
             num_hidden_units: Number of nodes within the hidden layer
             activation_fun: activation function for hidden layer
+            weights: [List : torch.nn.parameter.Parameter] Weights to be used for initialisation of layers. None if random initilisation.
+            glorot_init: If no weights supplied, should glorot-uniform dist be used to initialise weights
         """
         super(DenseNN, self).__init__()
         self.l1 = nn.Linear(784, num_hidden_units)
@@ -23,6 +28,13 @@ class DenseNN(nn.Module):
             self.layers = [self.l1, self.l2]
         else:
             self.layers = [self.l1, self.activation1, self.l2]
+
+        if weights is None:
+            if glorot_init:
+                xavier_uniform_(self.l1.weight)
+                xavier_uniform_(self.l2.weight)
+        else:
+            init_weights(self, weights)
         
     def forward(self, x):
         for layer in self.layers:
@@ -90,3 +102,28 @@ def test(args, model, device, test_loader):
     if args.verbosity > 1:
         print(f'\nTest set: Average loss: {test_loss}, Accuracy: {correct}/{len(test_loader.dataset)} ({100. * correct / len(test_loader.dataset)}%)\n')
     return test_loss
+
+
+def init_weights(model, weights):
+    """
+    To be used for the weight reuse scheme. Use weights of previous model (with n nodes) as initialisation of first n nodes of current model (m nodes, m > n).
+    Remaining m - n nodes are initialised from a normal(0, 0.01) distribution.
+    params:
+        model: (pytorch model) Model to initialise weights in
+        weights: [list : Tensor] Weights of each layer to set
+    return: (pytorch model)
+    """
+    hidden_unit_diff = len(model.l1.weight) - len(weights[0])
+    weight_ind = 0
+    for layer in model.layers:
+        if type(layer) == Linear:
+            if weight_ind == 0:
+                rows = hidden_unit_diff
+                cols = 784
+                dim = 0
+            elif weight_ind == 1:
+                rows = 10
+                cols = hidden_unit_diff
+                dim = 1
+            layer.weight = Parameter(torch.cat((weights[weight_ind], torch.normal(0, 0.1, size=(rows, cols))), dim=dim))
+            weight_ind += 1
