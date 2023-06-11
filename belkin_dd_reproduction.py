@@ -74,6 +74,9 @@ def main():
     else:
         device = torch.device("cpu")
 
+    if args.verbosity > 0:
+        print(f"Device: {device}")
+
     if type(args.hidden_units) == int:
         args.hidden_units = [args.hidden_units]
 
@@ -139,10 +142,10 @@ def main():
 
         if args.weight_reuse and NUM_PARAMS < args.train_size * 10:
             print("using weights")
-            model = DenseNN(num, activation, last_model_weight, args.glorot_init).to(device)
+            model = DenseNN(num, activation, device, last_model_weight, args.glorot_init).to(device)
         else:
             print("not using weights")
-            model = DenseNN(num, activation, None, False).to(device)
+            model = DenseNN(num, activation, device, None, False).to(device)
 
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 

@@ -11,11 +11,12 @@ class DenseNN(nn.Module):
     """
     Fully-connected neural network with 1 hidden layer for MNIST classification
     """
-    def __init__(self, num_hidden_units, activation_fun, weights=None, glorot_init=False):
+    def __init__(self, num_hidden_units, activation_fun, device, weights=None, glorot_init=False):
         """
         params:
             num_hidden_units: Number of nodes within the hidden layer
             activation_fun: activation function for hidden layer
+            device:
             weights: [List : torch.nn.parameter.Parameter] Weights to be used for initialisation of layers. None if random initilisation.
             glorot_init: If no weights supplied, should glorot-uniform dist be used to initialise weights
         """
@@ -34,7 +35,7 @@ class DenseNN(nn.Module):
                 xavier_uniform_(self.l1.weight)
                 xavier_uniform_(self.l2.weight)
         else:
-            init_weights(self, weights)
+            init_weights(self, weights, device)
         
     def forward(self, x):
         for layer in self.layers:
@@ -104,13 +105,14 @@ def test(args, model, device, test_loader):
     return test_loss
 
 
-def init_weights(model, weights):
+def init_weights(model, weights, device):
     """
     To be used for the weight reuse scheme. Use weights of previous model (with n nodes) as initialisation of first n nodes of current model (m nodes, m > n).
     Remaining m - n nodes are initialised from a normal(0, 0.01) distribution.
     params:
         model: (pytorch model) Model to initialise weights in
         weights: [list : Tensor] Weights of each layer to set
+        device:
     return: (pytorch model)
     """
     hidden_unit_diff = len(model.l1.weight) - len(weights[0])
@@ -125,5 +127,5 @@ def init_weights(model, weights):
                 rows = 10
                 cols = hidden_unit_diff
                 dim = 1
-            layer.weight = Parameter(torch.cat((weights[weight_ind], torch.normal(0, 0.1, size=(rows, cols))), dim=dim))
+            layer.weight = Parameter(torch.cat((weights[weight_ind], torch.normal(0, 0.1, size=(rows, cols)).to(device)), dim=dim))
             weight_ind += 1
