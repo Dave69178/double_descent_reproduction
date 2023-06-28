@@ -33,8 +33,8 @@ def main():
                         help='learning rate (default: 0.001)')
     parser.add_argument('--momentum', type=float, default=0.95, metavar='LR',
                         help='sgd momentum parameter (default: 0.95)')
-    parser.add_argument('--gamma', type=float, default=0.1, metavar='M',
-                        help='Learning rate step gamma (default: 0.1)')
+    parser.add_argument('--gamma', type=float, default=0.9, metavar='M',
+                        help='Learning rate step gamma (default: 0.9)')
     parser.add_argument('--weight-reuse', action='store_true', default=False,
                         help='Initialise larger models with smaller model final weights (default: False)')
     parser.add_argument('--glorot-init', action='store_true', default=False,
