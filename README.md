@@ -14,7 +14,9 @@
 
 ## Comments
 
-In its current state, the results obtained from my testing are quantitively and qualitively different from Belkin et al, as seen in the graphs above. Double descent is still observed, yet it arises as a steep step change at the interpolation threshold, as opposed to the gradual decrease in generalisation seen by Belkin et al [[1]](#1) (particularly obvious with the weight reuse scheme). I also notice little difference between the *weight reuse* and *no weight reuse* settings in the trend of generalisation with respect to number of model parameters.
+The results shown above are both from a single run of the experiment. To be updated later to show the average of training each model 5 times as in Belkin et al [[1]](#1). 
+
+Currently, results are similar for the no weight reuse run, however the double descent is not observed anywhere near as clearly as in the original experiment for the runs with the weight reuse scheme.
 
 As of now, it is possible that these differences may be due to a bug or oversight in my implementation. Particularly as <a href="https://github.com/SongweiGe/double-descent-pytorch">another reproduction</a> by <a href="https://github.com/SongweiGe">*SongweiGe*</a> managed to obtain results which more closely resembled Belkin et al [[1]](#1). Further questions arise from lacking details of the original experiment with regards to choice of activation function, learning rate, and batch sizes.
 
@@ -50,6 +52,15 @@ Training is started from the command line, where a number of options can be spec
 
 '*python belkin_dd_reproduction.py --hidden-units 4 6 10
  13 19 25 31 38 44 46 48 49 50 51 53 57 63 76 113 252 378 --activation-fun relu --seed **i** --save-metrics*'
+
+## Experimental Notes
+Details of implementation:
+- base learning rate: 0.001*
+- training batch size: 4000*
+- number of epochs: 6000
+- activation functions: ReLU*
+
+*Not defined by Belkin et al [[1]](#1), hence chosen.
 
 ---
 ## References
