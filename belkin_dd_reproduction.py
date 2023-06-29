@@ -91,7 +91,10 @@ def main():
         date_now = str(datetime.now().date())
         time_now = str(datetime.now().time())[:-7].replace(":", ";")
 
-        path = f"./models/{date_now}/{time_now}/"
+        if args.weight_reuse:
+            path = f"./models/{date_now}/weight_reuse/{time_now}/"
+        else:
+            path = f"./models/{date_now}/no_weight_reuse/{time_now}/"
         os.makedirs(path, exist_ok = True) 
 
         logging.basicConfig(filename=os.path.join(path, f"train_{time_now}.log"),
