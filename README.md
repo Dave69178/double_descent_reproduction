@@ -42,14 +42,14 @@ Training is started from the command line, where a number of options can be spec
 -Run the following command with varying seeds **i** $\in \{1,2,3,4,5\}$:
 
 '*python belkin_dd_reproduction.py --hidden-units 4 6 10
- 13 19 25 31 38 44 46 48 49 50 51 53 57 63 76 113 252 378 --weight-reuse --glorot-init --seed **i** --save-metrics*'
+ 13 19 25 31 38 44 46 48 49 50 51 53 57 63 76 113 252 378 --activation-fun relu --weight-reuse --glorot-init --seed **i** --save-metrics*'
 
 **No Weight Reuse**
 
 -Run the following command with varying seeds **i** $\in \{1,2,3,4,5\}$:
 
 '*python belkin_dd_reproduction.py --hidden-units 4 6 10
- 13 19 25 31 38 44 46 48 49 50 51 53 57 63 76 113 252 378 --seed **i** --save-metrics*'
+ 13 19 25 31 38 44 46 48 49 50 51 53 57 63 76 113 252 378 --activation-fun relu --seed **i** --save-metrics*'
 
 ---
 ## References
