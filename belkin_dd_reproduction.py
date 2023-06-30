@@ -177,8 +177,7 @@ def main():
                     print(f"LEARNING RATE: {scheduler.get_lr()}")
                     logging.info(f"LEARNING RATE: {scheduler.get_lr()}")
                 if args.save_model:
-                    path = f"./models/{date_now}/{time_now}/"
-                    os.makedirs(path, exist_ok = True) 
+                    os.makedirs(path, exist_ok = True)
                     torch.save(model.state_dict(), os.path.join(path, f"model_w_{num}_hidden_units_epoch_{epoch}.pt"))
 
         if args.save_model:
