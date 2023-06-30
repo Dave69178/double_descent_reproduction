@@ -11,7 +11,7 @@ class DenseNN(nn.Module):
     """
     Fully-connected neural network with 1 hidden layer for MNIST classification
     """
-    def __init__(self, num_hidden_units, activation_fun, device, weights=None, glorot_init=False):
+    def __init__(self, num_hidden_units, activation_fun, device, weights=None, biases=None, glorot_init=False):
         """
         params:
             num_hidden_units: Number of nodes within the hidden layer
@@ -35,7 +35,7 @@ class DenseNN(nn.Module):
                 xavier_uniform_(self.l1.weight)
                 xavier_uniform_(self.l2.weight)
         else:
-            init_weights(self, weights, device)
+            init_weights(self, weights, biases, device)
         
     def forward(self, x):
         for layer in self.layers:
@@ -105,7 +105,7 @@ def test(args, model, device, test_loader):
     return test_loss
 
 
-def init_weights(model, weights, device):
+def init_weights(model, weights, biases, device):
     """
     To be used for the weight reuse scheme. Use weights of previous model (with n nodes) as initialisation of first n nodes of current model (m nodes, m > n).
     Remaining m - n nodes are initialised from a normal(0, 0.01) distribution.
@@ -116,16 +116,19 @@ def init_weights(model, weights, device):
     return: (pytorch model)
     """
     hidden_unit_diff = len(model.l1.weight) - len(weights[0])
-    weight_ind = 0
+    ind = 0
     for layer in model.layers:
         if type(layer) == Linear:
-            if weight_ind == 0:
-                rows = hidden_unit_diff
-                cols = 784
+            if ind == 0:
+                weight_rows = hidden_unit_diff
+                weight_cols = 784
                 dim = 0
-            elif weight_ind == 1:
-                rows = 10
-                cols = hidden_unit_diff
+                bias_diff = hidden_unit_diff
+            elif ind == 1:
+                weight_rows = 10
+                weight_cols = hidden_unit_diff
+                bias_diff = 0
                 dim = 1
-            layer.weight = Parameter(torch.cat((weights[weight_ind], torch.normal(0, 0.1, size=(rows, cols)).to(device)), dim=dim))
-            weight_ind += 1
+            layer.weight = Parameter(torch.cat((weights[ind], torch.normal(0, 0.1, size=(weight_rows, weight_cols)).to(device)), dim=dim))
+            layer.bias = Parameter(torch.cat((biases[ind], torch.empty(bias_diff).normal_(0, 0.1).to(device))))
+            ind += 1

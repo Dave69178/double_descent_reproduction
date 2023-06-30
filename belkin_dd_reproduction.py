@@ -82,6 +82,7 @@ def main():
 
     if args.weight_reuse:
         last_model_weight = None
+        last_model_biases = None
 
     for num in args.hidden_units:
         if args.verbosity > 0:
@@ -105,7 +106,6 @@ def main():
                             force=True)
         
         logging.info(f"{args}")
-
         train_kwargs = {'batch_size': args.batch_size, 'shuffle': True}
         test_kwargs = {'batch_size': args.test_batch_size}
         if use_cuda:
@@ -133,7 +133,7 @@ def main():
         else:
             # Transfer whole datasets to device (i.e. GPU) before training (Faster)
             train_loader, test_loader = load_data_to_device(dataset1, dataset2, device, train_kwargs, test_kwargs)
-            
+
         if args.activation_fun == "sigmoid":
             activation = nn.Sigmoid()
         elif args.activation_fun == "relu":
@@ -145,10 +145,10 @@ def main():
 
         if args.weight_reuse and NUM_PARAMS < args.train_size * 10:
             print("using weights")
-            model = DenseNN(num, activation, device, last_model_weight, args.glorot_init).to(device)
+            model = DenseNN(num, activation, device, last_model_weight, last_model_biases, args.glorot_init).to(device)
         else:
             print("not using weights")
-            model = DenseNN(num, activation, device, None, False).to(device)
+            model = DenseNN(num, activation, device, None, None, False).to(device)
 
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
@@ -180,7 +180,7 @@ def main():
                     path = f"./models/{date_now}/{time_now}/"
                     os.makedirs(path, exist_ok = True) 
                     torch.save(model.state_dict(), os.path.join(path, f"model_w_{num}_hidden_units_epoch_{epoch}.pt"))
-        
+
         if args.save_model:
             torch.save(model.state_dict(), os.path.join(path, f"model_w_{num}_hidden_units_final.pt"))
 
@@ -192,9 +192,11 @@ def main():
 
         if args.weight_reuse:
             last_model_weight = []
+            last_model_biases = []
             for layer in model.layers:
                 if type(layer) == Linear:
                     last_model_weight.append(layer.weight)
+                    last_model_biases.append(layer.bias)
 
 
 if __name__ == '__main__':
