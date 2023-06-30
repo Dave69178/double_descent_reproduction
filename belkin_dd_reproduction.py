@@ -84,6 +84,34 @@ def main():
         last_model_weight = None
         last_model_biases = None
 
+    train_kwargs = {'batch_size': args.batch_size, 'shuffle': True}
+    test_kwargs = {'batch_size': args.test_batch_size}
+    if use_cuda:
+        cuda_kwargs = {'num_workers': 0, # Set to 0 as error when using data pre-transferred to GPU
+                    'pin_memory': False} # Set to False for same reason as above
+        train_kwargs.update(cuda_kwargs)
+        test_kwargs.update(cuda_kwargs)
+
+    transform=transforms.Compose([
+        transforms.ToTensor(),
+        torch.flatten
+        ])
+
+    logging.info(f"TRAIN_SET_SIZE: {args.train_size}")
+    dataset1 = datasets.MNIST('../data', train=True, download=True,
+                    transform=transform, target_transform=transforms.Compose([one_hot_transform]))
+    dataset2 = datasets.MNIST('../data', train=False, download=True,
+                    transform=transform, target_transform=transforms.Compose([one_hot_transform]))
+    dataset1 = Subset(dataset1, np.random.choice(len(dataset1), args.train_size, replace=False))
+
+    if args.no_pre_transfer:
+        # For use if not transferring to GPU before training loop
+        train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
+        test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
+    else:
+        # Transfer whole datasets to device (i.e. GPU) before training (Faster)
+        train_loader, test_loader = load_data_to_device(dataset1, dataset2, device, train_kwargs, test_kwargs)
+
     for num in args.hidden_units:
         if args.verbosity > 0:
             print(f"Training model with {num} hidden units")
@@ -104,35 +132,7 @@ def main():
                             datefmt='%H:%M:%S',
                             level=logging.DEBUG,
                             force=True)
-        
         logging.info(f"{args}")
-        train_kwargs = {'batch_size': args.batch_size, 'shuffle': True}
-        test_kwargs = {'batch_size': args.test_batch_size}
-        if use_cuda:
-            cuda_kwargs = {'num_workers': 0, # Set to 0 as error when using data pre-transferred to GPU
-                        'pin_memory': False} # Set to False for same reason as above
-            train_kwargs.update(cuda_kwargs)
-            test_kwargs.update(cuda_kwargs)
-
-        transform=transforms.Compose([
-            transforms.ToTensor(),
-            torch.flatten
-            ])
-
-        logging.info(f"TRAIN_SET_SIZE: {args.train_size}")
-        dataset1 = datasets.MNIST('../data', train=True, download=True,
-                        transform=transform, target_transform=transforms.Compose([one_hot_transform]))
-        dataset2 = datasets.MNIST('../data', train=False, download=True,
-                        transform=transform, target_transform=transforms.Compose([one_hot_transform]))
-        dataset1 = Subset(dataset1, np.random.choice(len(dataset1), args.train_size, replace=False))
-
-        if args.no_pre_transfer:
-            # For use if not transferring to GPU before training loop
-            train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
-            test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
-        else:
-            # Transfer whole datasets to device (i.e. GPU) before training (Faster)
-            train_loader, test_loader = load_data_to_device(dataset1, dataset2, device, train_kwargs, test_kwargs)
 
         if args.activation_fun == "sigmoid":
             activation = nn.Sigmoid()
