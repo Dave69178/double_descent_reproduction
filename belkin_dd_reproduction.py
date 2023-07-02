@@ -19,8 +19,8 @@ def main():
     parser = argparse.ArgumentParser(description='Belkin double descent reproduction')
     parser.add_argument('--hidden-units', nargs="*", type=int, default=52, metavar='N',
                         help='number of nodes within hidden layer (default: 4)')
-    parser.add_argument('--activation-fun', type=str, default="sigmoid",
-                        help='activation function to be used (default: sigmoid) (options: sigmoid, relu, none)')
+    parser.add_argument('--activation-fun', type=str, default="relu",
+                        help='activation function to be used (default: relu) (options: sigmoid, relu, none)')
     parser.add_argument('--train-size', type=int, default=4000,
                         help='size of training dataset (default: 4000)')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
