@@ -3,18 +3,38 @@
 <a href="https://www.pnas.org/doi/full/10.1073/pnas.1903070116">Belkin at al 2019</a> [[1]](#1) is a notable paper in the field of machine learning which aims to provide explanation for the observed phenomena of massively overparameterised models providing good generalisation - expanding the U-shaped bias-variance curve of classical theory. Here, I try to replicate their work which showcases double descent on fully connected neural networks trained to identify handwritten digits from MNIST dataset.
 
 ## Original Results from Belkin et al [[1]](#1)
+
 |Without weight reuse | With weight reuse |
 |:-------------------:|:-----------------:|
 | ![Losses without weight reuse](./figures/belkin_no_weight_reuse.png) | ![Losses with weight reuse](./figures/belkin_weight_reuse.png) |
 |||
+
 ## Reproduction
+
 |Without weight reuse | With weight reuse |
 |:-------------------:|:-----------------:|
 | ![Losses without weight reuse](./figures/no_weight_reuse_dd.png) | ![Losses with weight reuse](./figures/weight_reuse_dd.png) |
 
 ## Comments
 
-The results shown above are both from a single run of the experiment. To be updated later to show the average of training each model 5 times as in Belkin et al [[1]](#1). 
+- Similar qualitative trends to Belkin et al [[1]](#1) seen in both schemes, although there are some differences in magnitude. Peak at interpolation threshold is not as pronounced for the no weight reuse scheme, but is more pronounced for the weight reuse scheme. This is consistent with <a href="https://github.com/SongweiGe/double-descent-pytorch">another reproduction</a> by <a href="https://github.com/SongweiGe">*SongweiGe*</a>.
+
+## Extension
+
+### Addressing the weight reuse scheme
+
+- Reasoning provided by Belkin et al [[1]](#1) for the use of the weight reuse scheme is that stochastic gradient descent (SGD) is sensitive to initialisation. Therefore, they propose that in order to ensure decreasing training risk, larger networks should be initialised with the parameters from the trained previous (smaller) network.
+- However, their weight reuse scheme is only applied to models that do not have the ability to interpolate the data (i.e. number of model parameters $<$ number of data points $\times$ number of outputs $= 4000 \times 10$). Reasoning for this is again tied to the idea of decreasing training risk - they note that models above the interpolation threshold should have no issue in reaching zero training risk.
+- The remarkable drop in test loss (equivalently, the remarkable increase in generalisation capabilities) at the interpolation threshold is therefore a result of random initialisation. It can be seen that the *weight reuse* graph to the right of the interpolation threshold is similar to the *no weight reuse* graph in the same region.
+- To address this somewhat misleading figure, and to further explore the benefit of increasing model complexity the weight reuse scheme is applied to all models in the experiment - even models above the interpolation threshold will be initialised with the previous model's parameters.
+- The number of units in the hidden layer increases at a constant rate between each model. This ensures that the same amount of random initialisation occurs at the start of each model training procedure.
+- By comparing the 'no_weight_reuse' figure and the results below, we see that the weight reuse scheme is causing each model of greater capacity to be 'locked in' to solutions that generalise poorly. The right-hand side figure below again shows the ability of random initialisation - models initialised with a greater number of new 'free' (randomly initialised) parameters are able to find solutions that generalise well.
+- Hence, the trend of generalisation in the weight reuse setting can be manipulated by the size of the model capacity increment.
+
+|Full weight reuse - constant model capacity increment | Full weight reuse - varied model capacity increment |
+|:-------------------:|:-----------------:|
+| ![Losses without weight reuse](./figures/full_weight_reuse.png) | ![Full weight reuse scheme](./figures/extension_full_weight_reuse_dd.png) |
+|||
 
 -----
 
